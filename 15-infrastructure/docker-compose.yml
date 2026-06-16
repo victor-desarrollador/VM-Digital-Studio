@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Base de Datos Relacional + IA (PostgreSQL con pgvector)
+  postgres:
+    image: ankane/pgvector:latest # Imagen optimizada con soporte de vectores para IA
+    container_name: vm_digital_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: vmdigital_admin
+      POSTGRES_PASSWORD: vmdigital_secure_pass_2026
+      POSTGRES_DB: vmdigital_core
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - vmdigital_network
+
+  # Sistema Nervioso de Automatización conectado a Postgres
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: vm_digital_n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=vmdigital_core
+      - DB_POSTGRESDB_USER=vmdigital_admin
+      - DB_POSTGRESDB_PASSWORD=vmdigital_secure_pass_2026
+      - N8N_ENCRYPTION_KEY=vmdigital_crypto_secret_key_2026
+      - GENERIC_TIMEZONE=America/Argentina/Buenos_Aires
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - vmdigital_network
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+  n8n_data:
+
+networks:
+  vmdigital_network:
+    driver: bridge
